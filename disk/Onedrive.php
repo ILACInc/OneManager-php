@@ -976,7 +976,7 @@ class Onedrive {
         //$response['Location'] = curl_getinfo($ch);
         if ($response['stat']==429) {
             $res = json_decode($response['body'], true);
-            $retryAfter = $res['retryAfterSeconds'];
+            $retryAfter = $res['error']['retryAfterSeconds'];
             setConfig(['activeLimit' => time()+$retryAfter], $this->disktag);
         }
         curl_close($ch);
