@@ -13,7 +13,6 @@ class Googledrive {
         } else {
             $this->client_id = '106151778902-ajieetaab5ondhbvia97n4tr5k0cg8eo.apps.googleusercontent.com';
             $this->client_secret = 'LlCV-rQClzYIKCEqiVddh68G';
-            //$this->api_key = 'AIzaSyBjQG09ET3pqEXKs25K8OPI_YYBWuR0EZQ';
         }
         //$this->oauth_url = 'https://www.googleapis.com/oauth2/v4/';
         $this->oauth_url = 'https://accounts.google.com/o/oauth2/';
@@ -102,7 +101,7 @@ class Googledrive {
         while (substr($path, -1)=='/') $path = substr($path, 0, -1);
         if ($path == '') $path = '/';
 
-        //if (!($files = getcache('path_' . $path, $this->disktag))) {
+        if (!($files = getcache('path_' . $path, $this->disktag))) {
             //$response = curl('GET', $this->api_url . 'drives', '', ['Authorization' => 'Bearer ' . $this->access_token]);
             //$response = curl('GET', $this->api_url . 'files?fields=*,files(id,name,mimeType,size,modifiedTime,parents,webContentLink,thumbnailLink),nextPageToken' . (($this->default_drive_id!='')?'&driveId=' . $this->default_drive_id . '&corpora=teamDrive&includeItemsFromAllDrives=true&supportsAllDrives=true':''), '', ['Authorization' => 'Bearer ' . $this->access_token]);
             if ($path == '/' || $path == '') {
@@ -126,14 +125,16 @@ class Googledrive {
                             $files['time'] = $item['modifiedTime'];
                             $files['size'] = $item['size'];
                         } else {
+                            $weblink = curl('GET', $item['webContentLink'], '', '', 1)['returnhead']['Location'];
+                            $item['webContentLink'] = $weblink;
                             //if (isset($item['mimeType']) && $item['mimeType']!='application/vnd.google-apps.folder') {
                                 if (in_array(splitlast($item['name'],'.')[1], $exts['txt'])) {
                                     if (!(isset($item['content'])&&$item['content']['stat']==200)) {
                                         $content1 = curl('GET', $item['webContentLink'], '', '', 1);
                                         //error_log1(json_encode($tmp, JSON_PRETTY_PRINT));
-                                        if ($content1['stat']==302) {
-                                            $content1 = curl('GET', $content1['returnhead']['Location'], '', ["User-Agent"=>"qkqpttgf/OneManager 3.0.0", "Accept"=>"*/*"], 1);
-                                        }
+                                        //if ($content1['stat']==302) {
+                                        //    $content1 = curl('GET', $content1['returnhead']['Location'], '', ["User-Agent"=>"qkqpttgf/OneManager 3.0.0", "Accept"=>"*/*"], 1);
+                                        //}
                                         error_log1($item['name'] . '~' . json_encode($content1, JSON_PRETTY_PRINT) . PHP_EOL);
                                         $item['content'] = $content1;
                                         $parent_folder['files'][$i] = $item;
@@ -162,7 +163,7 @@ class Googledrive {
             } else {
                 savecache('path_' . $path, $files, $this->disktag, 600);
             }
-        //}
+        }
         //error_log1('path:' . $path . ', files:' . json_encode($files, JSON_PRETTY_PRINT));
         //error_log1('path:' . $path . ', files:' . substr(json_encode($files), 0, 150));
         return $files;
@@ -413,13 +414,13 @@ class Googledrive {
                 <label><input type="checkbox" name="NT_Drive_custom" onclick="document.getElementById(\'NT_secret\').style.display=(this.checked?\'\':\'none\');">' . getconstStr('CustomIdSecret') . '</label><br>
                 <div id="NT_secret" style="display:none;margin:10px 35px">
                     <a href="https://console.cloud.google.com/apis" target="_blank">' . getconstStr('GetSecretIDandKEY') . '</a><br>
-                    return_uri(Reply URL):<br>https://scfonedrive.github.io/<br>
-                    client_id:<input type="text" name="NT_client_id" style="width:100%" placeholder="a1b2c345-90ab-cdef-ghij-klmnopqrstuv"><br>
+                    return_uri(Reply URL):<br>https://scfonedrive.github.io<br>
+                    client_id:<input type="text" name="NT_client_id" style="width:100%" placeholder="123456789-abcdefghijklmno.apps.googleusercontent.com"><br>
                     client_secret:<input type="text" name="NT_client_secret" style="width:100%"><br>
                 </div>
         </div>
         <br>';
-        if ($_SERVER['language']=='zh-cn') $html .= '你要理解 scfonedrive.github.io 是github上的静态网站，<br>除非github真的挂掉了，<br>不然，稍后你如果连不上，请检查你的运营商或其它“你懂的”问题！<br>';
+        if ($_SERVER['language']=='zh-cn') $html .= '你要理解 scfonedrive.github.io 是github上的静态网站，<br><font color="red">除非github真的挂掉</font>了，<br>不然，稍后你如果连不上，请检查你的运营商或其它“你懂的”问题！<br>';
         $html .='
         <input type="submit" value="' . getconstStr('Submit') . '">
     </form>
