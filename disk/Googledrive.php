@@ -181,9 +181,19 @@ class Googledrive {
     protected function fileList($parent_file_id = '')
     {
         $url = $this->api_url . 'files';
-        if ($parent_file_id!='') $url .= '/' . $parent_file_id;
+
         $url .= '?fields=files(id,name,mimeType,size,modifiedTime,parents,webContentLink,thumbnailLink,shared,permissions,permissionIds),nextPageToken';
         //$url .= '?fields=files(*),nextPageToken';
+        //$url .= '?q=mimeType=\'application/vnd.google-apps.folder\'';
+        if ($parent_file_id!='') {
+            $q = ${parent_file_id};
+        } else {
+            if ($this->default_drive_id!='') $q = $this->default_drive_id;
+            else $q = 'root';
+        }
+        $q = '\'' . $q . '\' in parents and trashed = false';
+        $q = urlencode($q);
+        $url .= '&q=' . $q;
         if ($this->default_drive_id!='') $url .= '&driveId=' . $this->default_drive_id . '&corpora=teamDrive&includeItemsFromAllDrives=true&supportsAllDrives=true';
 
         $header['Authorization'] = 'Bearer ' . $this->access_token;
